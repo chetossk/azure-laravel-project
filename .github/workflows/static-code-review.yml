@@ -1,0 +1,34 @@
+name: Static Code Review & CI
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: dom, curl, libxml, mbstring, zip, pdo_sqlite
+          cache: 'composer'
+
+      - name: Install Composer Dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Run Unit Tests (Chequeo 1 - Funcionalidad)
+        run: php artisan test
+
+      - name: Run Laravel Pint (Chequeo 2 - Estilo)
+        run: ./vendor/bin/pint --test
+
+      - name: Run PHPStan/Larastan (Chequeo 3 - Seguridad/Calidad)
+        # Usar el nivel de severidad que hayas definido en phpstan.neon
+        run: ./vendor/bin/phpstan analyse --configuration=phpstan.neon
